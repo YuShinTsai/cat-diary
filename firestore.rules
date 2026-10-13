@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 每個家庭一個空間，空間 ID 是共享連結 ?space= 後面的隨機字串。
+    // 只能讀寫「已知空間 ID」底下的紀錄，無法列出別人的空間。
+    match /spaces/{spaceId}/records/{recordId} {
+      allow read, delete: if spaceId.size() >= 16;
+      allow create, update: if spaceId.size() >= 16
+        && request.resource.data.keys().hasOnly(['col', 'rec', 'updatedAt'])
+        && request.resource.data.col is string
+        && request.resource.data.rec is map;
+    }
+  }
+}
